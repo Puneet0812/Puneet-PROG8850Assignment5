@@ -1,36 +1,12 @@
-# PROG8850 Assignment 5
-environment with mysql, python, node and docker
+This project for PROG8850 Assignment 5 showcases a complete end-to-end database automation workflow using Ansible, Python, and MySQL. The objective was to automate the creation of a database schema, load CSV datasets from a Brazilian e-commerce archive, optimize query performance, and analyze the effects of indexing on query execution.
 
-TLDR;
+All tasks are fully orchestrated using a single Ansible playbook (up.yaml) which handles database and table creation, data ingestion from CSV files, index creation, and query performance testing. Python scripts (loaddata_all.py, create_indexes.py, and dbtests.py) are integrated within the playbook to modularize data loading, indexing, and performance analysis.
 
-```bash
-pip install -r requirements.txt
-sudo service mysql start
-```
+The database includes five key tables: orders, customers, order_items, payments, and products. Data from these tables is loaded from the official Kaggle dataset provided by Olist. After loading, a scalar index was created on payments(payment_value) to optimize aggregation queries, and a FULLTEXT index was created on products(product_category_name) to support full-text search with MATCH() ... AGAINST().
 
-To access database:
+Query performance was timed and analyzed using Python. EXPLAIN plans before and after indexing were compared, showing clear improvements. For example, full table scans (ALL) were reduced to index-based lookups (index, ref) as a result of indexing.
 
-```bash
-sudo mysql -u root
-```
+The entire pipeline was tested in GitHub Codespaces using Python 3.12 and MySQL 8.0 over a UNIX socket. Execution was verified through screenshots of successful Ansible playbook runs, SHOW INDEX confirmations, and EXPLAIN output.
 
-Download `archive.zip`, a dataset of ~100,000 ecommerce orders from [here](https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce?resource=download) using your google id. Make a mysql database using ansible to create the schema and import the data from the .csv files. Make some tests that time queries on amount and other scalar fields in te database.
+This project highlights the importance of database automation and indexing in real-world data pipelines, providing a practical example of how DevOps tools like Ansible can integrate seamlessly with Python and SQL-based workflows to ensure repeatable, scalable deployments.
 
-Use the `MATCH () ... AGAINST` syntax to test some full text searches and time them as well.
-
-Use EXPLAIN to investigate how your searches are being run.
-
-Create indexes and re-run your tests and timings. Make some notes and commit them to this repository of who would be interested in running your searches and what their goals are. Note how your performance improvements would help them achieve their goals.
-
-## Marking
-
-|Item|Out Of|
-|--|--:|
-|up.yaml creating the database|1|
-|up.yaml loading csv data|2|
-|tests of scalar fields like amounts|2|
-|tests of full text searches|2|
-|up.yaml to create indices|2|
-|explanation of searches, goals and outcomes of indexing|1|
-|||
-|total|10|

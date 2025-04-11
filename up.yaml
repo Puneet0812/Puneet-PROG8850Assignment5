@@ -1,0 +1,109 @@
+---
+- name: Setup MySQL database and trigger full data load
+  hosts: localhost
+  connection: local
+  become: true
+
+  tasks:
+    - name: Create ecommerce database
+      community.mysql.mysql_db:
+        name: ecommerce
+        state: present
+        login_user: root
+        login_unix_socket: /var/run/mysqld/mysqld.sock
+
+    # Customers Table
+    - name: Create customers table
+      community.mysql.mysql_query:
+        login_user: root
+        login_unix_socket: /var/run/mysqld/mysqld.sock
+        login_db: ecommerce
+        query: |
+          CREATE TABLE IF NOT EXISTS customers (
+            customer_id VARCHAR(50),
+            customer_unique_id VARCHAR(50),
+            customer_zip_code_prefix VARCHAR(10),
+            customer_city VARCHAR(50),
+            customer_state VARCHAR(10)
+          );
+
+    # Orders Table
+    - name: Create orders table
+      community.mysql.mysql_query:
+        login_user: root
+        login_unix_socket: /var/run/mysqld/mysqld.sock
+        login_db: ecommerce
+        query: |
+          CREATE TABLE IF NOT EXISTS orders (
+            order_id VARCHAR(50),
+            customer_id VARCHAR(50),
+            order_status VARCHAR(50),
+            order_purchase_timestamp DATETIME,
+            order_approved_at DATETIME,
+            order_delivered_carrier_date DATETIME,
+            order_delivered_customer_date DATETIME,
+            order_estimated_delivery_date DATETIME
+          );
+
+    # Order Items Table
+    - name: Create order_items table
+      community.mysql.mysql_query:
+        login_user: root
+        login_unix_socket: /var/run/mysqld/mysqld.sock
+        login_db: ecommerce
+        query: |
+          CREATE TABLE IF NOT EXISTS order_items (
+            order_id VARCHAR(50),
+            order_item_id INT,
+            product_id VARCHAR(50),
+            seller_id VARCHAR(50),
+            shipping_limit_date DATETIME,
+            price FLOAT,
+            freight_value FLOAT
+          );
+
+    # Payments Table
+    - name: Create payments table
+      community.mysql.mysql_query:
+        login_user: root
+        login_unix_socket: /var/run/mysqld/mysqld.sock
+        login_db: ecommerce
+        query: |
+          CREATE TABLE IF NOT EXISTS payments (
+            order_id VARCHAR(50),
+            payment_sequential INT,
+            payment_type VARCHAR(50),
+            payment_installments INT,
+            payment_value FLOAT
+          );
+
+    # Products Table
+    - name: Create products table
+      community.mysql.mysql_query:
+        login_user: root
+        login_unix_socket: /var/run/mysqld/mysqld.sock
+        login_db: ecommerce
+        query: |
+          CREATE TABLE IF NOT EXISTS products (
+            product_id VARCHAR(50),
+            product_category_name VARCHAR(50),
+            product_name_length INT,
+            product_description_length INT,
+            product_photos_qty INT,
+            product_weight_g FLOAT,
+            product_length_cm FLOAT,
+            product_height_cm FLOAT,
+            product_width_cm FLOAT
+          );
+
+    # Load all tables using Python
+    - name: Run loaddata_all.py to load all tables
+      command: python3 loaddata_all.py
+
+    # Create indexes to improve performance
+    - name: Run create_indexes.py to add indexes
+      command: python3 create_indexes.py
+
+    # Time and analyze query performance
+    - name: Run dbtests.py to time queries and show EXPLAIN output
+      command: python3 dbtests.py
